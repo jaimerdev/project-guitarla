@@ -1,3 +1,4 @@
+import {useState, useEffect} from 'react'
 import {
     Meta,
     Links,
@@ -52,9 +53,51 @@ export function links() {
 }
 
 export default function App() {
+    const cartLS = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('cart')) ?? [] : null
+    const [cart, setCart] = useState(cartLS)
+    useEffect(() => {
+        localStorage.setItem('cart', JSON.stringify(cart))
+    }, [cart])
+    const addToCart = guitar => {
+        if(cart.some(guitarState => guitarState.id === guitar.id)) {
+            //Iterar sobre el arreglo, e identificar el elemento duplicado
+            const updatedCart = cart.map(guitarState => {
+                if(guitarState.id === guitar.id) {
+                    //Reescribir la cantidad
+                    guitarState.amount = guitar.amount
+                }
+                return guitarState
+            })
+            //Añadir al carrito
+            setCart(updatedCart)
+        } else {
+            //No existe un producto igual, por lo tanto...
+            setCart([...cart, guitar])
+        }
+    }
+    const updateAmount = guitar => {
+        const updatedCart = cart.map(guitarState => {
+            if(guitarState.id === guitar.id) {
+                guitarState.amount = guitar.amount
+            }
+            return guitarState
+        })
+        setCart(updatedCart)
+    }
+    const deleteGuitar = id => {
+        const updatedCart = cart.filter(guitarState => guitarState.id !== id)
+        setCart(updatedCart)
+    }
     return(
         <Document>
-            <Outlet />
+            <Outlet
+                context={{
+                    addToCart,
+                    cart,
+                    updateAmount,
+                    deleteGuitar
+                }}
+            />
         </Document>
     )
 }

@@ -1,6 +1,6 @@
-import {useLoaderData} from '@remix-run/react'
+import { useState } from 'react'
+import {useLoaderData, useOutletContext} from '@remix-run/react'
 import {getGuitar} from '~/models/guitars.server'
-import styles from '~/styles/guitars.css'
 
 export async function loader({params}) {
   const {urlGuitar} = params
@@ -33,27 +33,53 @@ export function meta({data}) {
     }
   ]
 }
-export function links() {
-  return [
-    {
-      rel: 'stylesheet',
-      href: styles
-    }
-  ]
-}
 function Guitar() {
+  const {addToCart} = useOutletContext()
+  const [amount, setAmount] = useState(0);
   const guitar = useLoaderData();
-  console.log(guitar.data[0])
   const {name, description, image, price} = guitar.data[0].attributes
+  const handleSubmit = e => {
+    e.preventDefault();
+    if(amount < 1) {
+      alert('Selecciona una cantidad')
+      return
+    }
+    const selectedGuitar = {
+      id: guitar.data[0].id,
+      image: image.data.attributes.url,
+      name,
+      price,
+      amount
+    }
+    addToCart(selectedGuitar)
+  }
   return (
-    <main className='container guitar'>
+    <div className='guitar'>
       <img  className='image' src={image.data.attributes.url} alt={`Imagen de la guitarra ${name}`} />
       <div className='content'>
         <h3>{name}</h3>
         <p className='text'>{description}</p>
         <p className='price'>${price}</p>
+        <form onSubmit={handleSubmit} className='form'>
+          <label htmlFor="amount">Cantidad</label>
+          <select
+            onChange={e => setAmount(parseInt(e.target.value))}
+            id="amount"
+          >
+            <option value="0">-- Seleccione --</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+          <input
+            type="submit"
+            value="Agregar al carrito"
+          />
+        </form>
       </div>
-    </main>
+    </div>
   )
 }
 export default Guitar
